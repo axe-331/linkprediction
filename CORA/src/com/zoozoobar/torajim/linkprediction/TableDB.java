@@ -70,6 +70,7 @@ public class TableDB {
 		ResultSet rs = null;
 		try {
 			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
 			rs = stmt.executeQuery(sql);
 			if(rs.next() == true) {
 				if(year < rs.getInt(3)) {
@@ -80,10 +81,16 @@ public class TableDB {
 					// System.out.println("year changed.");
 					return true;
 				} else {
+					rs.close();
+					stmt.close();
 					return false;
 				}
 			}
+			
+			rs.close();
+			stmt.close();
 		} catch (SQLException e) {
+			System.out.println("sql:" + sql);
 			e.printStackTrace();
 		}
 		
@@ -135,12 +142,7 @@ public class TableDB {
 		String sql;
 		
 		Statement stmt = null;
-		try {
-			stmt = MySQLCommand.getConn().createStatement();
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+
 		int result = 0;
 		for(int i=0; i<len; i++) {
 			for(int j=i+1; j<len; j++) {
@@ -149,7 +151,7 @@ public class TableDB {
 				try {
 					stmt = MySQLCommand.getConn().createStatement();
 					result = stmt.executeUpdate(sql);
-					//stmt.close();
+					stmt.close();
 				} catch (SQLException e) {
 					if(e.getErrorCode() != 1062) {
 						// duplicate 에러가 아니면
@@ -174,15 +176,19 @@ public class TableDB {
 		int tuples = 200000000;
 		try {
 			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
 			//rs = stmt.executeQuery("select authors, origin, year from "+ fTABLE_NAME_PAPERS +" where origin=\"dblp\" limit " + tuples);
 			rs = stmt.executeQuery("select authors, origin, year from "+ fTABLE_NAME_PAPERS +" limit " + tuples);
-			for(int i=0; rs.next();i++) {
+			for(int i=1; rs.next();i++) {
 //				System.out.println(rs.getString("authors") + rs.getString("origin") + rs.getInt("year"));
 				__insertValuesObjectPair(rs.getString(1), rs.getString(2), rs.getInt(3));
 				if(i % 1000 == 0) {
 					System.out.print(".");
+					if (i%10000 == 0) System.out.println(" " + i +":" + (System.currentTimeMillis() - start)/1000.0 + "s");
 				}
 			}
+			rs.close();
+			stmt.close();
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

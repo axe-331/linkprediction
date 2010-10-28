@@ -38,5 +38,4 @@ public class basicParser {
 		// TODO Auto-generated method stub
 		basicParser app = new basicParser();
 	}
-
 }

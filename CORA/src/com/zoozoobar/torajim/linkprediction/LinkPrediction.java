@@ -23,13 +23,28 @@ public class LinkPrediction {
 //		TableDB.dropTablePapers();
 //		TableDB.createTablePapers();
 //		cora.startParser(file);
-//				
+////				
 //		file = new File("C:\\Users\\ucu\\workspace\\LinkPrediction\\trunk\\DBLP\\dblp.xml");
 //		dblp.startParser(file);
 		
-		TableDB.dropTableObjectPair();
-		TableDB.createTableObjectPair();
+//		TableDB.dropTableObjectPair();
+//		TableDB.createTableObjectPair();
 		TableDB.insertValuesObjectPair();
+	
+//		TableDB.dropTableKeywords();
+//		TableDB.createTableKeywords();
+//		TableDB.fillTableKeywords("cora");
+//		TableDB.fillTableKeywords("DBLP");
+////		
+//		TableDB.dropTableNeightbors();
+//		TableDB.createTableNeighbors();
+//		TableDB.fillTableNeighbors("cora");
+		
+//		TableDB.printPaperCount("cora");
+//		TableDB.printAuthorCount("cora");
+//		TableDB.printKeywordCount("cora");
+//		TableDB.printAuthorPaper("cora");
+//		TableDB.printAuthorKeyword("cora");
+//		TableDB.printAuthorNeighbor("cora");
 	}
-
 }

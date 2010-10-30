@@ -22,7 +22,9 @@ public class ParserCORA {
 		"he","was","for","on","are","with","as","i","his","they",
 		"be","at","one","have","this","form","or","had","by","hot",
 		"but","some","what","there","we","can","out","other","were","all",
-		"your","when","up","use","word","how","said","an","each","she"
+		"your","when","up","use","word","how","said","an","each","she",
+		"which", "do", "their", "time", "if", "will", "way", "about", "many", "then",
+		"them", "would", "write", "like", "so", "these", "her", "long", "make", "thing"
 		// 50 words in http://www.world-english.org/english500.htm
 	};
 	
@@ -60,7 +62,8 @@ public class ParserCORA {
 		String returnString = "";
 		int i,j;
 		if (string == null) return null;
-		if (__authorParseEnd(string)) return string.trim();
+		if (__authorParseEnd(string)) 
+			return string.replaceAll(",", "").replaceAll("et al.", "").replaceAll("et al","").trim();
 		
 		for(i=0; i<AUTHOR_NAME_DELIMETER.length; i++) {
 			authors = string.split(AUTHOR_NAME_DELIMETER[i]);
@@ -68,9 +71,15 @@ public class ParserCORA {
 			
 			for(j=0; j<authors.length; j++) {
 				author = getAuthor(authors[j]);
+				author = author.replaceAll("et al", "");
 				if(author.compareTo("") == 0) continue;
+				
+				if(author.length() < 3) continue;
 				returnString += author.replaceAll(",", "").replaceAll("&","") + "\t";
 				//System.out.println("returnString:" + returnString);
+			}
+			if (returnString.lastIndexOf("\t") < 0) {
+				return returnString;
 			}
 			return returnString.substring(0, returnString.lastIndexOf("\t"));
 		}
@@ -110,12 +119,12 @@ public class ParserCORA {
 	private int getYear(String string){
 		String year = __extractContent(string, fYEAR_LEFT, fYEAR_RIGHT);
 		if(year == null) {
-			year = __extractContent(string, fBOOKTITLE_LEFT, fBOOKTITLE_RIGHT);
-			if(year == null) {
-				year = __extractContent(string, fTITLE_LEFT, fTITLE_RIGHT);
-				if (year == null) return 0;
-			}
-			
+			return 0;
+//			year = __extractContent(string, fBOOKTITLE_LEFT, fBOOKTITLE_RIGHT);
+//			if(year == null) {
+//				year = __extractContent(string, fTITLE_LEFT, fTITLE_RIGHT);
+//				if (year == null) return 0;
+//			}	
 		}
 		StringCharacterIterator iter = new StringCharacterIterator(year);
 		int startIndex = -1;
@@ -223,7 +232,7 @@ public class ParserCORA {
 		}
 	
 		long end = System.currentTimeMillis();
-		System.out.println("");
+		System.out.println("a:" + a);
 		System.out.println( "ParserCORA 실행 시간 : " + ( end - start )/1000.0 );
 	}
 }

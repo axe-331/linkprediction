@@ -45,6 +45,7 @@ public class MySQLCommand {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.out.println("sql:"+sql);
 		}
 	}
 	

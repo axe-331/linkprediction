@@ -73,7 +73,24 @@ public class ParserDBLP {
 	}
 	
 	private String getAuthors(String token) {
-		return getContents(token, fAUTHOR_LEFT, fAUTHOR_RIGHT);
+		String startTemp[] = token.split (fAUTHOR_LEFT);
+		String endTemp[];
+		String contents = "";
+		if(startTemp.length < 2) return "";
+		
+		int notab = 1;
+		
+		for(int i=notab; i<startTemp.length; i++) {
+			endTemp = startTemp[i].split(fAUTHOR_RIGHT);
+			endTemp[0] = endTemp[0].replaceAll("et al.", "").replaceAll("et al", "");
+			if(endTemp[0].length() < 3) {
+				notab++;
+				continue;
+			}
+			if(i != notab) contents = contents.concat("\t");
+			contents = contents.concat(endTemp[0].trim());
+		}
+		return contents.replaceAll(",", "").replaceAll("\"", "");
 	}
 	
 	private String getTitle(String token) {

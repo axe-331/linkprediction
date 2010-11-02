@@ -10,12 +10,18 @@ public class UtilKeywords {
 	
 	UtilKeywords(String keywords) {
 		String keyword[] = keywords.split("\t");
-		Set<String> keywordList = new HashSet<String>();		
+		Set<String> keywordList = new HashSet<String>();
+		Set<String> lowercaseKeywordList = new HashSet<String>();
+		String lowercaseKeyword = "";
 		
 		for(int i=0; i<keyword.length; i++) {
 			if(keyword[i]=="") continue;
-			if(existKeyword(keywordList, keyword[i])) continue;
+			if(!KeywordList.isValidKeyword(keyword[i])) continue;
+			
+			lowercaseKeyword = keyword[i].toLowerCase();
+			if(lowercaseKeywordList.contains(lowercaseKeyword)) continue;
 			keywordList.add(keyword[i]);
+			lowercaseKeywordList.add(lowercaseKeyword);
 		}
 		
 		String[] __keywords = new String[keywordList.size()];
@@ -36,30 +42,19 @@ public class UtilKeywords {
 		
 		for(int i=0; i<keyword.length; i++) {
 			if(keyword[i]=="") continue;
-			if(keywordList.contains(keyword[i])) continue;
-			keywordList.add(keyword[i]);
+			if(keywordList.contains(keyword[i].toLowerCase())) continue;
+			keywordList.add(keyword[i].toLowerCase());
 		}
 		
-		String[] __keywords = new String[keywordList.size()];
-		System.arraycopy(keywordList.toArray(), 0, __keywords, 0, keywordList.size());
-		Arrays.sort(__keywords, String.CASE_INSENSITIVE_ORDER);
-		String __keyword = "";
-		for(int i=0; i<__keywords.length; i++) {
-			if(i != 0) __keyword = __keyword.concat("\t");
-			__keyword = __keyword.concat(__keywords[i]);
-		}
+//		String[] __keywords = new String[keywordList.size()];
+//		System.arraycopy(keywordList.toArray(), 0, __keywords, 0, keywordList.size());
+//		Arrays.sort(__keywords, String.CASE_INSENSITIVE_ORDER);
+//		String __keyword = "";
+//		for(int i=0; i<__keywords.length; i++) {
+//			if(i != 0) __keyword = __keyword.concat("\t");
+//			__keyword = __keyword.concat(__keywords[i]);
+//		}
 		return keywordList.size();
-	}
-	
-	private static boolean existKeyword(Set<String> keywordList, String keyword) {
-		Object[] keywords = keywordList.toArray();
-		
-		for(int i=0; i<keywords.length; i++) {
-			String temp = keywords[i].toString();
-			if(temp.toLowerCase().equals(keyword.toLowerCase())) return true;
-		}
-		
-		return false;
 	}
 	
 	public int getKeywordCount() {

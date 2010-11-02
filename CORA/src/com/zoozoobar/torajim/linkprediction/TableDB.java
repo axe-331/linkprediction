@@ -16,9 +16,10 @@ public class TableDB {
 //	private static final String fTABLE_NAME_OBJECTPAIR = "objectpair_temp";
 	private static final String fTABLE_NAME_KEYWORDS = "keywords";
 	private static final String fTABLE_NAME_NEIGHBORS = "neighbors";
+	private static final String fTABLE_NAME_OBJECTPAIR_COMPLETE = "objectpair_temp";
 	
 	public static void dropTablePapers() {
-		String sql = "drop table " + fTABLE_NAME_PAPERS;
+		String sql = "drop table if exists " + fTABLE_NAME_PAPERS;
 		MySQLCommand.executeUpdate(sql);
 	}
 	
@@ -123,44 +124,6 @@ public class TableDB {
 		return result;
 	}
 	
-	private static int getSizeObjectPair() {
-		Statement stmt = null;
-		ResultSet rst = null;
-		int result = 0;
-		try {
-			stmt = MySQLCommand.getConn().createStatement();
-			rst = stmt.executeQuery("select id from "+ fTABLE_NAME_OBJECTPAIR);
-			rst.last();
-			result = rst.getRow();
-			
-			rst.close();
-			stmt.close();
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		return result;
-	}
-	
-	public static int getSizePapers() {
-		Statement stmt = null;
-		ResultSet rst = null;
-		int result = 0;
-		try {
-			stmt = MySQLCommand.getConn().createStatement();
-			rst = stmt.executeQuery("select authors, origin, year from "+ fTABLE_NAME_PAPERS);
-			rst.last();
-			result = rst.getRow();
-			
-			rst.close();
-			stmt.close();
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		return result;
-	}
-	
 	private static void __insertValuesObjectPair(String authors, String origin, int year) {
 		String tokens[] = authors.split("\t");
 		Arrays.sort(tokens, String.CASE_INSENSITIVE_ORDER);
@@ -195,7 +158,7 @@ public class TableDB {
 		}
 	}
 	
-	public static void insertValuesObjectPair() {
+	public static void fillTableObjectPair() {
 		Statement stmt = null;
 		ResultSet rs = null;
 		long start = System.currentTimeMillis();
@@ -207,7 +170,6 @@ public class TableDB {
 			rs = stmt.executeQuery("select authors, origin, year from "+ fTABLE_NAME_PAPERS +" limit " + tuples);
 			for(int i=1; rs.next();i++) {
 //				System.out.println(rs.getString("authors") + rs.getString("origin") + rs.getInt("year"));
-				if(i < 350000) continue;
 				__insertValuesObjectPair(rs.getString(1), rs.getString(2), rs.getInt(3));
 				if(i % 1000 == 0) {
 					System.out.print(".");
@@ -396,6 +358,7 @@ public class TableDB {
 		String authorList[] = authors.split("\t");
 		
 		for(int i=0; i<authorList.length; i++) {
+			if(!AuthorList.isValidAuthor(authorList[i])) continue;
 			String sql = "select keywords,papercount from " + fTABLE_NAME_KEYWORDS + 
 			" where author=\"" + authorList[i] +"\"";
 			Statement stmt = null;
@@ -471,7 +434,7 @@ public class TableDB {
 	}
 	
 	public static void dropTableKeywords() {
-		String sql = "drop table " + fTABLE_NAME_KEYWORDS;
+		String sql = "drop table if exists " + fTABLE_NAME_KEYWORDS;
 		MySQLCommand.executeUpdate(sql);
 		System.out.println("DROP TABLE KEYWORDS!!");
 	}
@@ -495,23 +458,22 @@ public class TableDB {
 		MySQLCommand.executeUpdate(sql);
 	}
 	
-	private static void insertTableNeighbors(String authorA, String authorB, String origin) {
-		String sql = "select neighbors, count from " + fTABLE_NAME_NEIGHBORS +
-		" where author=\"" + authorA +"\"";
+	private static void insertTableNeighbors(String author, String neighbors, String origin) {
+		String sql = "select neighbors from " + fTABLE_NAME_NEIGHBORS +
+		" where author=\"" + author +"\"" + " and origin=\"" + origin + "\"";
 		Statement stmt = null;
 		ResultSet rs = null;
 		String oldNeighbors = "";
-		int oldCount = 0;
 		try {
 			stmt = MySQLCommand.getConn().createStatement();
 			stmt.setFetchSize(1000);
 			rs = stmt.executeQuery(sql);
 			if(rs.next()) {
 				oldNeighbors = rs.getString(1);
-				oldCount = rs.getInt(2);
-				__updateTableNeighbors(authorA, oldNeighbors.concat("\t"+authorB), oldCount+1, origin);
+				UtilKeywords util = new UtilKeywords(oldNeighbors.concat("\t" + neighbors));
+				__updateTableNeighbors(author, util.getKeywords(), util.getKeywordCount(), origin);
 			} else {
-				__insertTableNeighbors(authorA, authorB, 1, origin);
+				__insertTableNeighbors(author, neighbors, UtilKeywords.getKeywordCount(neighbors), origin);
 			}
 			rs.close();
 			stmt.close();
@@ -522,31 +484,42 @@ public class TableDB {
 	}
 	
 	public static void fillTableNeighbors(String origin) {
-		String sql = "select object_a, object_b from " + fTABLE_NAME_OBJECTPAIR + 
-		" where origin=\""+ origin + "\"";
+		String sql = "select authors " +
+				"from " + fTABLE_NAME_PAPERS + " " +
+				"where origin=\"" + origin + "\"";
+
 		Statement stmt = null;
 		ResultSet rs = null;
-		String authorA = "";
-		String authorB = "";
 		
-		int i=0;
+		String author = "";
+		String neighbors = "";
+		int a=0;
 		long start = System.currentTimeMillis();
-		
 		
 		try {
 			stmt = MySQLCommand.getConn().createStatement();
 			stmt.setFetchSize(1000);
 			rs = stmt.executeQuery(sql);
 			while(rs.next()) {
-				i++;
-				if(i%1000 == 0) {
-					System.out.println("current:"+i + "\ttime:"+ (System.currentTimeMillis() - start) / 1000.0);
+				a++;
+				if(a%1000 == 0) {
+					System.out.println("current:"+ a + "\ttime:"+ (System.currentTimeMillis() - start) / 1000.0);
 				}
-				authorA = rs.getString(1);
-				authorB = rs.getString(2);
-				
-				insertTableNeighbors(authorA, authorB, origin);
-				insertTableNeighbors(authorB, authorA, origin);
+				String authorList[] = rs.getString(1).split("\t");
+				Arrays.sort(authorList, String.CASE_INSENSITIVE_ORDER);
+				int LEN = authorList.length;
+				for(int i=0; i<LEN; i++) {
+					author = authorList[i];
+					if(!AuthorList.isValidAuthor(author)) continue;
+					neighbors = "";
+					for(int j=i+1; j<LEN; j++) {
+						if(!AuthorList.isValidAuthor(authorList[j])) continue;
+						neighbors += authorList[j]+"\t";
+					}
+					if(neighbors.equals("")) continue;
+					
+					insertTableNeighbors(author, neighbors, origin);
+				}
 			}			
 			rs.close();
 			stmt.close();
@@ -570,11 +543,197 @@ public class TableDB {
 	}
 	
 	public static void dropTableNeightbors() {
-		String sql = "drop table " + fTABLE_NAME_NEIGHBORS;
+		String sql = "drop table if exists " + fTABLE_NAME_NEIGHBORS;
 		MySQLCommand.executeUpdate(sql);
 	}
 	
+	public static void createTableObjectpairComplete() {
+		String sql =
+			"create table " + fTABLE_NAME_OBJECTPAIR_COMPLETE +
+			"(id int not null auto_increment," +
+			"object_a varchar(128) not null," +
+			"object_b varchar(128) not null," +
+			"type varchar(2) not null," +
+			"origin varchar(8) not null," +
+			"year int not null," +
+			"primary key (id)," +
+			"unique (object_a, object_b, type)" +
+			")";
 	
+		MySQLCommand.executeUpdate(sql);
+		System.out.println("create table " + fTABLE_NAME_OBJECTPAIR_COMPLETE);
+	}
+	
+	public static void dropTableObjectpairComplete() {
+		String sql = "drop table if exists " + fTABLE_NAME_OBJECTPAIR_COMPLETE;
+		MySQLCommand.executeUpdate(sql);
+		System.out.println("drop table " + fTABLE_NAME_OBJECTPAIR_COMPLETE);
+	}
+	
+	private static boolean __updateYearObjectpairComplete(String object_a, String object_b, String type, int year) {
+		String sql	=	"select year from " + fTABLE_NAME_OBJECTPAIR_COMPLETE +
+		" where object_a=\""+object_a +"\" and object_b=\"" + object_b + "\"" +
+		"and type=\"" + type + "\"";
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery(sql);
+			if(rs.next() == true) {
+				if(year < rs.getInt(1)) {
+					rs.close();
+					stmt.close();
+					MySQLCommand.executeUpdate("update "+ fTABLE_NAME_OBJECTPAIR_COMPLETE + " set year="+year+
+							" where object_a=\""+object_a +"\" and object_b=\"" + object_b + "\"" + 
+							"and type=\"" + type + "\"");
+					// System.out.println("year changed.");
+					return true;
+				} else {
+					rs.close();
+					stmt.close();
+					return false;
+				}
+			}
+			
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			System.out.println("sql:" + sql);
+			e.printStackTrace();
+		}
+		
+		return false;
+	}
+	
+	private static void __insertValuesObjectpairComplete(String authors, String origin, int year) {
+		String tokens[] = authors.split("\t");
+		Arrays.sort(tokens, String.CASE_INSENSITIVE_ORDER);
+		int len = tokens.length;
+		String sql;
+		
+		Statement stmt = null;
+
+//		int result = 0;
+		String type = year<1997?"L":"T";
+		for(int i=0; i<len; i++) {
+			if(!AuthorList.isValidAuthor(tokens[i])) continue;
+			for(int j=i+1; j<len; j++) {
+				if(!AuthorList.isValidAuthor(tokens[j])) continue;
+				sql =	"insert into " + fTABLE_NAME_OBJECTPAIR_COMPLETE + "(object_a, object_b, type, origin, year)" +
+						"values (\"" + tokens[i] + "\", \""+tokens[j] + "\"," + 
+						"\"" + type + "\"," +
+						"\""+ origin+"\""+"," + year +")";
+				try {
+					stmt = MySQLCommand.getConn().createStatement();
+					stmt.executeUpdate(sql);
+					stmt.close();
+				} catch (SQLException e) {
+					if(e.getErrorCode() != 1062) {
+						// duplicate 에러가 아니면
+						System.out.println(sql + e.getErrorCode());
+						e.printStackTrace();
+						System.exit(0);	
+					}
+					
+					if(__updateYearObjectpairComplete(tokens[i], tokens[j], type, year)) {
+						//TEST
+						//System.exit(0);
+					}
+				}
+			}
+		}
+	}
+	public static void fillTableObjectpairComplete(String origin) {
+		Statement stmt = null;
+		ResultSet rs = null;
+		long start = System.currentTimeMillis();
+		int tuples = 200000000;
+		try {
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery("select authors, origin, year from "+ fTABLE_NAME_PAPERS +" " +
+					"where origin=\"" + origin +"\" limit " + tuples);
+			for(int i=1; rs.next();i++) {
+				__insertValuesObjectpairComplete(rs.getString(1), rs.getString(2), rs.getInt(3));
+				if(i % 1000 == 0) {
+					System.out.print(".");
+					if (i%10000 == 0) System.out.println(" " + i +":" + (System.currentTimeMillis() - start)/1000.0 + "s");
+				}
+			}
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		Set<String> authorL = new HashSet<String>();
+		String authorA = "";
+		String authorB = "";
+		try {
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery("select object_a, object_b " +
+					"from "+ fTABLE_NAME_OBJECTPAIR_COMPLETE +" " +
+					"where type=\"L\"");
+			for(int i=1; rs.next();i++) {
+				authorA = rs.getString(1).toLowerCase();
+				authorB = rs.getString(2).toLowerCase();
+				if(!authorL.contains(authorA)) authorL.add(authorA);
+				if(!authorL.contains(authorB)) authorL.add(authorB);
+				if(i % 1000 == 0) {
+					System.out.print(".");
+					if (i%10000 == 0) System.out.println(" " + i +":" + (System.currentTimeMillis() - start)/1000.0 + "s");
+				}
+			}
+			System.out.println(" :" + (System.currentTimeMillis() - start)/1000.0 + "s");
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			stmt = MySQLCommand.getConn().createStatement(
+					ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE);
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery("select id, object_a, object_b, type " +
+					"from "+ fTABLE_NAME_OBJECTPAIR_COMPLETE +" " +
+					"where type=\"T\"");
+			int count = 0;
+			for(int i=1; rs.next();i++) {
+				authorA = rs.getString(2).toLowerCase();
+				authorB = rs.getString(3).toLowerCase();
+				if(!authorL.contains(authorA)) {
+					System.out.println("update id:"+ rs.getInt(1));
+					rs.updateString("type", "L");
+					rs.updateRow();
+					count++;
+					authorL.add(authorA);
+					if(!authorL.contains(authorB)) authorL.add(authorB);
+				} else if(!authorL.contains(authorB)) {
+					System.out.println("update id:"+ rs.getInt(1));
+					rs.updateString("type", "L");
+					rs.updateRow();
+					count++;
+					authorL.add(authorB);
+					if(!authorL.contains(authorA)) authorL.add(authorA);
+				} 
+				
+				if(i % 1000 == 0) {
+					System.out.print(".");
+					if (i%10000 == 0) System.out.println(" " + i +":" + (System.currentTimeMillis() - start)/1000.0 + "s");
+				}
+			}
+			System.out.println(" :" + (System.currentTimeMillis() - start)/1000.0 + "s" + 
+					"\tupdate:" + count);
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
 	
 	public static void printPaperCount(String origin) {
 		for(int year=1900; year<2011; year++) {
@@ -643,7 +802,7 @@ public class TableDB {
 	public static void printKeywordCount(String origin) {
 		int count = 0;
 		int sum = 0;
-		for(int year=1900; year<2011; year++) {
+		for(int year=1960; year<2001; year++) {
 			String sql = "select keywords from " + fTABLE_NAME_PAPERS + 
 			" where origin=\"" + origin +"\" and year="+year;
 			
@@ -668,7 +827,10 @@ public class TableDB {
 				System.out.println(year + "\t" + 0);
 				continue;
 			}
-			count = UtilKeywords.getKeywordCount(keywords);
+			UtilKeywords util = new UtilKeywords(keywords);
+			count = util.getKeywordCount();
+			
+//			count = UtilKeywords.getKeywordCount(keywords);
 			System.out.println(year + "\t" + count);
 			sum += count;
 		}

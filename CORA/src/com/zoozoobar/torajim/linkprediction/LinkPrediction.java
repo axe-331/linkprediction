@@ -20,6 +20,13 @@ public class LinkPrediction {
 		
 		MySQLCommand.connServer();
 	
+		long start = System.currentTimeMillis();
+		AuthorList.initAuthorList();
+		System.out.println("authorlist time:" + (System.currentTimeMillis()-start) / 1000.0);
+		KeywordList.initKeywordList();
+		System.out.println("keywordlist time:" + (System.currentTimeMillis()-start) / 1000.0);
+//		
+		
 //		TableDB.dropTablePapers();
 //		TableDB.createTablePapers();
 //		cora.startParser(file);
@@ -29,16 +36,21 @@ public class LinkPrediction {
 		
 //		TableDB.dropTableObjectPair();
 //		TableDB.createTableObjectPair();
-		TableDB.insertValuesObjectPair();
+//		TableDB.insertValuesObjectPair();
 	
 //		TableDB.dropTableKeywords();
 //		TableDB.createTableKeywords();
+//		
 //		TableDB.fillTableKeywords("cora");
 //		TableDB.fillTableKeywords("DBLP");
 ////		
 //		TableDB.dropTableNeightbors();
 //		TableDB.createTableNeighbors();
 //		TableDB.fillTableNeighbors("cora");
+		
+		TableDB.dropTableObjectpairComplete();
+		TableDB.createTableObjectpairComplete();
+		TableDB.fillTableObjectpairComplete("cora");
 		
 //		TableDB.printPaperCount("cora");
 //		TableDB.printAuthorCount("cora");

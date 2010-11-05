@@ -27,8 +27,10 @@ public class ParserCORA {
 		"them", "would", "write", "like", "so", "these", "her", "long", "make", "thing",
 		"see", "him", "two", "has", "look", "more", "day", "could", "go", "come",
 		"did", "my", "sound", "no", "most", "number", "who", "over", "know", "water",
-		"than", "call", "first", "people", "may", "down", "side", "been", "now", "find"
-		// 50 words in http://www.world-english.org/english500.htm
+		"than", "call", "first", "people", "may", "down", "side", "been", "now", "find",
+		// 100 words in http://www.world-english.org/english500.htm
+		"using", "based", "analysis", "data", "approach", "from", "new", "study", "problem", "its",
+		"via", "between", "under"
 	};
 	
 	private final String fAUTHOR_LEFT = "<author>";

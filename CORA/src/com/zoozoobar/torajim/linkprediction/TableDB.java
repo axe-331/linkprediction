@@ -4,9 +4,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 public class TableDB {
@@ -17,6 +17,10 @@ public class TableDB {
 	private static final String fTABLE_NAME_KEYWORDS = "keywords";
 	private static final String fTABLE_NAME_NEIGHBORS = "neighbors";
 	private static final String fTABLE_NAME_OBJECTPAIR_COMPLETE = "objectpair_temp";
+	private static final String fTABLE_NAME_SCORES = "scores";
+	
+	private static final String fTABLE_NAME_KEYWORDLIST = "keywordlist";
+	private static final String fTABLE_NAME_AUTHORLIST = "authorlist";
 	
 	public static void dropTablePapers() {
 		String sql = "drop table if exists " + fTABLE_NAME_PAPERS;
@@ -356,6 +360,7 @@ public class TableDB {
 	
 	public static void insertTableKeywords(String authors, String keywords, String origin) {
 		String authorList[] = authors.split("\t");
+		Arrays.sort(authorList, String.CASE_INSENSITIVE_ORDER);
 		
 		for(int i=0; i<authorList.length; i++) {
 			if(!AuthorList.isValidAuthor(authorList[i])) continue;
@@ -449,7 +454,6 @@ public class TableDB {
 		MySQLCommand.executeUpdate(sql);
 	}
 	
-	
 	private static void __updateTableNeighbors(String author, String neighbors, int count, String origin){
 		String sql = "update " + fTABLE_NAME_NEIGHBORS + 
 		" set neighbors=\"" + neighbors + "\"" +
@@ -508,11 +512,13 @@ public class TableDB {
 				String authorList[] = rs.getString(1).split("\t");
 				Arrays.sort(authorList, String.CASE_INSENSITIVE_ORDER);
 				int LEN = authorList.length;
+				
 				for(int i=0; i<LEN; i++) {
 					author = authorList[i];
 					if(!AuthorList.isValidAuthor(author)) continue;
 					neighbors = "";
-					for(int j=i+1; j<LEN; j++) {
+					for(int j=0; j<LEN; j++) {
+						if(i == j) continue;
 						if(!AuthorList.isValidAuthor(authorList[j])) continue;
 						neighbors += authorList[j]+"\t";
 					}
@@ -910,5 +916,165 @@ public class TableDB {
 			}
 			System.out.println(neighbor + "\t" + count);
 		}
+	}
+	
+	public static void initDataKeywordPapercount(HashMap<String, ObjectKeyword> keywordPapercount) {
+		String sql = "select keyword, papercount from " + fTABLE_NAME_KEYWORDLIST; 
+		int i = 0;
+		Statement stmt = null;
+		ResultSet rs = null;
+		
+		try {
+			i++;
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery(sql);
+			while(rs.next()) {
+				String keyword = rs.getString(1).toLowerCase();
+				ObjectKeyword object = new ObjectKeyword(keyword, rs.getInt(2));
+				if(keywordPapercount.put(keyword, object) == null) {
+					//System.out.println("keyword:" + keyword + "\t");
+				}
+				i++;
+//				System.out.println("keywordPapercount:" + keywordPapercount.size() + "\ti:" + i);
+			}
+			
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			System.out.println("sql:" + sql);
+			e.printStackTrace();
+		}
+		
+	}
+	
+	public static void initDataAuthorList(HashMap<String, ObjectAuthor> authorList) {
+		String sql = "select author, keywords from " + fTABLE_NAME_KEYWORDS; 
+		int i= 0;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery(sql);
+			while(rs.next()) {
+				i++;
+				String author = rs.getString(1);
+				String keywords = rs.getString(2);
+				ObjectAuthor object = new ObjectAuthor(author.toLowerCase(), keywords);
+				authorList.put(author.toLowerCase(), object);
+//				if(i == 1) System.out.println(object.getKeywordList().toString());
+			}
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			System.out.println("sql:" + sql);
+			e.printStackTrace();
+		}
+		System.out.println(authorList.size() +"/"+ i);
+		
+		sql = "select author, count from " + fTABLE_NAME_NEIGHBORS;
+		try {
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery(sql);
+			i = 0;
+			while(rs.next()) {
+				i++;
+				authorList.get(rs.getString(1).toLowerCase()).setNeighborcount(rs.getInt(2));
+			}
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			System.out.println("sql:" + sql);
+			e.printStackTrace();
+		} catch (NullPointerException e) {
+			try {
+				System.out.println(rs.getString(1) +"/" +rs.getInt(2));
+			} catch (SQLException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+		}
+		System.out.println(i);
+	}
+	
+	public static void initDataPairList(HashSet<ObjectPair> pairList) {
+		String sql = "select object_a, object_b, type from " + fTABLE_NAME_OBJECTPAIR_COMPLETE;
+		int i=0;
+		Statement stmt = null;
+		ResultSet rs = null;
+		try {
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery(sql);
+			while(rs.next()) {
+				i++;
+				String type = rs.getString(3);
+				ObjectData.getAUTHOR_LIST().get(rs.getString(1).toLowerCase()).increaseCount(type);
+				ObjectData.getAUTHOR_LIST().get(rs.getString(2).toLowerCase()).increaseCount(type);
+			}
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			System.out.println("sql:" + sql);
+			e.printStackTrace();
+		}
+		
+		
+		sql = "select id, object_a, object_b, type from " + fTABLE_NAME_OBJECTPAIR_COMPLETE;
+		try {
+			stmt = MySQLCommand.getConn().createStatement();
+			stmt.setFetchSize(1000);
+			rs = stmt.executeQuery(sql);
+			while(rs.next()) {
+				i++;
+				int id = rs.getInt(1);
+				ObjectAuthor authorA = ObjectData.getAUTHOR_LIST().get(rs.getString(2).toLowerCase());
+				ObjectAuthor authorB = ObjectData.getAUTHOR_LIST().get(rs.getString(3).toLowerCase());
+				String type = rs.getString(4);
+				
+				ObjectPair objectPair = new ObjectPair(id, authorA, authorB, type);
+				pairList.add(objectPair);
+			}
+			rs.close();
+			stmt.close();
+		} catch (SQLException e) {
+			System.out.println("sql:" + sql);
+			e.printStackTrace();
+		} 
+//		catch (NullPointerException e) {
+//			
+//		}
+		System.out.println(i);
+	}
+	
+	public static void createTableScore() {
+		String sql =
+			"create table " + fTABLE_NAME_SCORES +
+			"(id int not null," +
+			"object_a varchar(128) not null," +
+			"object_b varchar(128) not null," +
+			"type varchar(2) not null," +
+			"neighbor varchar(2) not null," +
+			"validset varchar(2) not null," +
+			"scoreA int," +
+			"scoreB double," +
+			"scoreC double," +
+			"scoreD double," +
+			"primary key (id)," +
+			"unique (object_a, object_b, type)" +
+			")";
+	
+		MySQLCommand.executeUpdate(sql);
+		System.out.println("create table " + fTABLE_NAME_SCORES);
+	}
+	
+	public static void dropTableScore() {
+	
+	}
+	
+	public static void fillTableScore() {
+		
 	}
 }

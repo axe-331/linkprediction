@@ -41,8 +41,15 @@ public class ParserDBLP {
 		"he","was","for","on","are","with","as","i","his","they",
 		"be","at","one","have","this","form","or","had","by","hot",
 		"but","some","what","there","we","can","out","other","were","all",
-		"your","when","up","use","word","how","said","an","each","she"
-		// 50 words in http://www.world-english.org/english500.htm
+		"your","when","up","use","word","how","said","an","each","she",
+		"which", "do", "their", "time", "if", "will", "way", "about", "many", "then",
+		"them", "would", "write", "like", "so", "these", "her", "long", "make", "thing",
+		"see", "him", "two", "has", "look", "more", "day", "could", "go", "come",
+		"did", "my", "sound", "no", "most", "number", "who", "over", "know", "water",
+		"than", "call", "first", "people", "may", "down", "side", "been", "now", "find",
+		// 100 words in http://www.world-english.org/english500.htm
+		"using", "based", "analysis", "data", "approach", "from", "new", "study", "problem", "its",
+		"via", "between", "under"
 	};
 	
 	ParserDBLP() {

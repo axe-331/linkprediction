@@ -14,19 +14,19 @@ public class LinkPrediction {
 	 */
 	public static void main(String[] args) throws IOException {
 		// TODO Auto-generated method stub
-//		ParserCORA cora = new ParserCORA();
+		ParserCORA cora = new ParserCORA();
 //		ParserDBLP dblp = new ParserDBLP();
-//		File file = new File("C:\\Users\\ucu\\workspace\\LinkPrediction\\trunk\\CORA\\papers");
+		File file = new File("C:\\Users\\ucu\\workspace\\LinkPrediction\\trunk\\CORA\\papers");
 		
 		MySQLCommand.connServer();
 	
-//		long start = System.currentTimeMillis();
-//		AuthorList.initAuthorList();
-//		System.out.println("authorlist time:" + (System.currentTimeMillis()-start) / 1000.0);
-//		KeywordList.initKeywordList();
-//		System.out.println("keywordlist time:" + (System.currentTimeMillis()-start) / 1000.0);
+		long start = System.currentTimeMillis();
+		AuthorList.initAuthorList();
+		System.out.println("authorlist time:" + (System.currentTimeMillis()-start) / 1000.0);
+		KeywordList.initKeywordList();
+		System.out.println("keywordlist time:" + (System.currentTimeMillis()-start) / 1000.0);
 //		
-		
+//		
 //		TableDB.dropTablePapers();
 //		TableDB.createTablePapers();
 //		cora.startParser(file);
@@ -36,14 +36,14 @@ public class LinkPrediction {
 		
 //		TableDB.dropTableObjectPair();
 //		TableDB.createTableObjectPair();
-//		TableDB.insertValuesObjectPair();
-	
+//		TableDB.fillTableObjectPair();
+//	
 //		TableDB.dropTableKeywords();
 //		TableDB.createTableKeywords();
 //		
 //		TableDB.fillTableKeywords("cora");
 //		TableDB.fillTableKeywords("DBLP");
-////		
+//////		
 //		TableDB.dropTableNeightbors();
 //		TableDB.createTableNeighbors();
 //		TableDB.fillTableNeighbors("cora");
@@ -59,5 +59,11 @@ public class LinkPrediction {
 //		TableDB.printAuthorKeyword("cora");
 //		TableDB.printAuthorNeighbor("cora");
 		ObjectData.initData();
+//		ObjectData.printTest();
+//		TableDB.dropTableScores();
+//		TableDB.createTableScores();
+//		TableDB.fillTableScores();
+		System.out.println("Hello world");
+		ObjectData.printAuthorSize();
 	}
 }

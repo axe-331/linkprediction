@@ -42,8 +42,6 @@ public class ParserCORA {
 	
 	private final String fYEAR_LEFT = "<year>";
 	private final String fYEAR_RIGHT = "</year>";
-	private final String fBOOKTITLE_LEFT = "<booktitle>";
-	private final String fBOOKTITLE_RIGHT = "</booktitle>";
 	
 	private boolean isValidLine(String[] tokens) {
 		return (tokens.length >= 3);
@@ -68,7 +66,7 @@ public class ParserCORA {
 		int i,j;
 		if (string == null) return null;
 		if (__authorParseEnd(string)) 
-			return string.replaceAll(",", "").replaceAll("et al.", "").replaceAll("et al","").trim();
+			return string.replaceAll("et al.", "").replaceAll("et al","").replaceAll("\\p{Punct}", "").trim();
 		
 		for(i=0; i<AUTHOR_NAME_DELIMETER.length; i++) {
 			authors = string.split(AUTHOR_NAME_DELIMETER[i]);
@@ -76,11 +74,11 @@ public class ParserCORA {
 			
 			for(j=0; j<authors.length; j++) {
 				author = getAuthor(authors[j]);
-				author = author.replaceAll("et al", "");
+				author = author.replaceAll("et al", "").replaceAll("\\p{Punct}", "").trim();
 				if(author.compareTo("") == 0) continue;
 				
 				if(author.length() < 3) continue;
-				returnString += author.replaceAll(",", "").replaceAll("&","") + "\t";
+				returnString += author + "\t";
 				//System.out.println("returnString:" + returnString);
 			}
 			if (returnString.lastIndexOf("\t") < 0) {
@@ -100,7 +98,7 @@ public class ParserCORA {
 			return null;
 		}
 		String temp_end[] = temp_start[1].split(endDelimeter);
-		return temp_end[0].trim().replaceAll(",", "").replaceAll("\"", "");
+		return temp_end[0].trim().replaceAll("\\p{Punct}", "").toLowerCase();
 	}
 	
 	private String getAuthors(String string) {
@@ -146,9 +144,14 @@ public class ParserCORA {
 		if(startIndex == -1) return 0;
 		endIndex = iter.getIndex();
 		year = year.substring(startIndex, endIndex);
-		
-		int result = Integer.parseInt(year);
-		if(result < 1000 || result >= 10000) return 0; 
+		int result = 0;
+		try {
+			result = Integer.parseInt(year);
+			if(result < 1000 || result >= 10000) return 0; 
+			
+		} catch(Exception e) {
+			System.out.println("year:" + year + "\tstring:" + string);
+		}
 		return result;
 	}
 	

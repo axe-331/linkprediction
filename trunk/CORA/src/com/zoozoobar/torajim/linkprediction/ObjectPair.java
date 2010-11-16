@@ -24,6 +24,9 @@ public class ObjectPair {
 	private String origin;
 	
 	private String neighbor;		// author 의 neighbor가 모두 2<= count <= 10 일 경우 true
+	public String getNeighbor() {
+		return neighbor;
+	}
 	private String validset;		// author 가 L과 T 모두에 3번 이상 나타났을 경우 true
 	
 	private int keywordScoreA;		// keyword 교집합
@@ -73,7 +76,10 @@ public class ObjectPair {
 			HashSet<String> authorBNeighbors = authorB.getNeighborList();
 			
 			calcNeighborScoreA(authorANeighbors, authorBNeighbors);
-			calcNeighborScoreB(authorANeighbors, authorBNeighbors);
+			if(calcNeighborScoreB(authorANeighbors, authorBNeighbors) < 0.0) {
+				System.out.println("A:" + authorA.getAuthor() + "\tB:" + authorB.getAuthor());
+				System.out.println("A:" + authorA.getNeighborcount() + "\tB:" + authorB.getNeighborcount());
+			}
 			calcNeighborScoreC(authorANeighbors, authorBNeighbors);
 			calcNeighborScoreD(authorANeighbors, authorBNeighbors);
 //		}
@@ -92,9 +98,11 @@ public class ObjectPair {
 		}
 	}
 	
-	private void calcNeighborScoreB(HashSet<String> authorANeighbors, HashSet<String> authorBNeighbors) {
+	private double calcNeighborScoreB(HashSet<String> authorANeighbors, HashSet<String> authorBNeighbors) {
 		int sum = authorANeighbors.size() + authorBNeighbors.size() - this.neighborScoreA;
-		this.neighborScoreB = (double)this.neighborScoreA / (double)sum; 
+		this.neighborScoreB = (double)this.neighborScoreA / (double)sum;
+		if(sum == 0) return -1.0;
+		return this.neighborScoreB;
 	}
 	
 	private void calcNeighborScoreC(HashSet<String> authorANeighbors, HashSet<String> authorBNeighbors) {

@@ -18,6 +18,7 @@ public class TableDB {
 	private static final String fTABLE_NAME_NEIGHBORS = "neighbors";
 	private static final String fTABLE_NAME_OBJECTPAIR_COMPLETE = "objectpair_complete";
 	private static final String fTABLE_NAME_SCORES = "scores";
+	private static final String fTABLE_NAME_FALSESET = "falseset";
 	
 	private static final String fTABLE_NAME_KEYWORDLIST = "keywordlist";
 	private static final String fTABLE_NAME_AUTHORLIST = "authorlist";
@@ -505,6 +506,8 @@ public class TableDB {
 			stmt = MySQLCommand.getConn().createStatement();
 			stmt.setFetchSize(1000);
 			rs = stmt.executeQuery(sql);
+			int c1 = 0;
+			int c2 = 0;
 			while(rs.next()) {
 				a++;
 				if(a%1000 == 0) {
@@ -516,18 +519,25 @@ public class TableDB {
 				
 				for(int i=0; i<LEN; i++) {
 					author = authorList[i];
-					if(!AuthorList.isValidAuthor(author)) continue;
+					if(!AuthorList.isValidAuthor(author)) {
+						c1++;
+						continue;
+					}
 					neighbors = "";
 					for(int j=0; j<LEN; j++) {
 						if(i == j) continue;
 						if(!AuthorList.isValidAuthor(authorList[j])) continue;
 						neighbors += authorList[j]+"\t";
 					}
-					if(neighbors.equals("")) continue;
+					if(neighbors.equals("")) {
+						c2++;
+						continue;
+					}
 					
 					insertTableNeighbors(author, neighbors, origin);
 				}
-			}			
+			}		
+			System.out.println("c1="+c1+"\tc2="+c2);
 			rs.close();
 			stmt.close();
 		} catch (SQLException e) {
@@ -901,7 +911,7 @@ public class TableDB {
 	
 	public static void printAuthorNeighbor(String origin) {
 		int count = 0;
-		for(int neighbor=1; neighbor<100; neighbor++) {
+		for(int neighbor=0; neighbor<100; neighbor++) {
 			String sql = "select count(author) from " + fTABLE_NAME_NEIGHBORS + 
 			" where origin=\"" + origin +"\" and count="+neighbor;
 			
@@ -1138,6 +1148,49 @@ public class TableDB {
 		while(iter.hasNext()) {
 			ObjectPair ob = iter.next();
 			String sql = "insert into " + fTABLE_NAME_SCORES + 
+			" values(" + ob.getSqlValues() + ")";
+			MySQLCommand.executeUpdate(sql);
+		}
+	}
+	
+	public static void createTableFalseset() {
+		String sql =
+			"create table " + fTABLE_NAME_FALSESET +
+			"(id int not null," +
+			"object_a varchar(128) not null," +
+			"object_b varchar(128) not null," +
+			"type varchar(2) not null," +
+			"origin varchar(8) not null," +
+			"neighbor varchar(2) not null," +
+			"validset varchar(2) not null," +
+			"keyword_scoreA int," +
+			"keyword_scoreB double," +
+			"keyword_scoreC int," +
+			"keyword_scoreD double," +
+			"neighbor_scoreA int," +
+			"neighbor_scoreB double," +
+			"neighbor_scoreC int," +
+			"neighbor_scoreD double," +
+			"primary key (id)," +
+			"unique (object_a, object_b, type)" +
+			")";
+	
+		MySQLCommand.executeUpdate(sql);
+		System.out.println("create table " + fTABLE_NAME_FALSESET);
+	}
+	
+	public static void dropTableFalseset() {
+		String sql = "drop table if exists " + fTABLE_NAME_FALSESET;
+		MySQLCommand.executeUpdate(sql);
+		System.out.println("drop table " + fTABLE_NAME_FALSESET);
+	}
+	
+	public static void fillTableFalseset() {
+		HashSet<ObjectPair> pairList = ObjectData.getFALSESET_PAIR_LIST();
+		Iterator<ObjectPair> iter = pairList.iterator();
+		while(iter.hasNext()) {
+			ObjectPair ob = iter.next();
+			String sql = "insert into " + fTABLE_NAME_FALSESET + 
 			" values(" + ob.getSqlValues() + ")";
 			MySQLCommand.executeUpdate(sql);
 		}

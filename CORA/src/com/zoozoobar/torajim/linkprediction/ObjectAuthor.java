@@ -107,7 +107,7 @@ public class ObjectAuthor {
 			}
 		}
 	}
-	
+
 	public void setNeighborcount(int neighborcount) {
 		this.neighborcount = neighborcount;
 	}

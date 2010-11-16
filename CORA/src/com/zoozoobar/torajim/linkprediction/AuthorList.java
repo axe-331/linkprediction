@@ -21,7 +21,7 @@ public class AuthorList {
 			rs = stmt.executeQuery(sql);
 			while(rs.next()) {
 				
-				author = rs.getString(1);
+				author = rs.getString(1).toLowerCase();
 				if(authorList.contains(author)) continue;
 				authorList.add(author); 
 			}
@@ -36,6 +36,6 @@ public class AuthorList {
 	}
 	
 	public static boolean isValidAuthor(String author) {
-		return !authorList.contains(author);
+		return !authorList.contains(author.toLowerCase());
 	}
 }

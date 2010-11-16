@@ -43,7 +43,7 @@ public class LinkPrediction {
 //		
 //		TableDB.fillTableKeywords("cora");
 //		TableDB.fillTableKeywords("DBLP");
-//////		
+		
 //		TableDB.dropTableNeightbors();
 //		TableDB.createTableNeighbors();
 //		TableDB.fillTableNeighbors("cora");
@@ -57,13 +57,17 @@ public class LinkPrediction {
 //		TableDB.printKeywordCount("cora");
 //		TableDB.printAuthorPaper("cora");
 //		TableDB.printAuthorKeyword("cora");
-//		TableDB.printAuthorNeighbor("cora");
-		ObjectData.initData();
+		TableDB.printAuthorNeighbor("cora");
+//		ObjectData.initData();
 //		ObjectData.printTest();
 //		TableDB.dropTableScores();
 //		TableDB.createTableScores();
 //		TableDB.fillTableScores();
-		System.out.println("Hello world");
-		ObjectData.printAuthorSize();
+//		System.out.println("Hello world");
+//		ObjectData.printAuthorSize();
+//		ObjectData.makeFalseset();
+//		TableDB.dropTableFalseset();
+//		TableDB.createTableFalseset();
+//		TableDB.fillTableFalseset();
 	}
 }

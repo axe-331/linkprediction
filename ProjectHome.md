@@ -1,0 +1,1 @@
+We will compare several link prediction methods (Common neighborhood, preferential attachment, Jaccard Coefficient, Adamic/Adar, Cohesion/Coupling) based on CORA dataset.
